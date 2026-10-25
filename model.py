@@ -205,8 +205,24 @@ def prepare_cleaned_features(X, iqr_k=1.5):
     return X
     pass
 
-# Step 20 - assemble_feature_matrix (not yet solved)
-# TODO: implement
+# Step 20 - assemble_feature_matrix
+import numpy as np
+def assemble_feature_matrix(X_num, ratio_num_idx, ratio_den_idx, cat_labels=None):
+    # TODO: build an extended feature matrix by appending a derived ratio...
+    numerator = X_num[:, ratio_num_idx]
+    denominator = X_num[:, ratio_den_idx]
+
+    # Compute and append the ratio feature
+    ratio_col = make_ratio_feature(numerator, denominator,eps=1e-8)
+    X_ext = append_column(X_num, ratio_col)
+
+    # Optionally one-hot encode and append categorical features
+    if cat_labels is not None:
+        cat_block = one_hot_encode(cat_labels)
+        X_ext = np.hstack((X_ext, cat_block))
+
+    return X_ext
+    pass
 
 # Step 21 - make_train_val_test (not yet solved)
 # TODO: implement
