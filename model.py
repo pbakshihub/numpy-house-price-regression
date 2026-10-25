@@ -295,6 +295,41 @@ def evaluate_predictions(y_true, y_pred):
     }
     pass
 
-# Step 24 - house_price_pipeline (not yet solved)
-# TODO: implement
+# Step 24 - house_price_pipeline
+def house_price_pipeline(X, y, ratio_num_idx, ratio_den_idx, cat_labels=None, train_ratio=0.7, val_ratio=0.15, seed=42, iqr_k=1.5):
+    # TODO: Run full clean->featurize->split->standardize->OLS->evaluate pipeline...
+    
+    X_cleaned = prepare_cleaned_features(X, iqr_k=iqr_k)
+
+    # 2. Assemble extended feature matrix (numeric + ratio + optional categoricals)
+    X_feat = assemble_feature_matrix(
+        X_cleaned, ratio_num_idx, ratio_den_idx, cat_labels=cat_labels
+    )
+
+    # 3. Create reproducible train/val/test splits
+    splits = make_train_val_test(X_feat, y, train_ratio, val_ratio, seed)
+
+    # 4. Standardize features based strictly on training stats and prepend bias column
+    std_splits, mean, std = standardize_and_add_bias(splits)
+
+    # 5. Fit OLS weights on the training split
+    theta = ols_fit(std_splits["X_train"], std_splits["y_train"])
+
+    # 6. Generate predictions for validation and test splits
+    y_val_pred = ols_predict(std_splits["X_val"], theta)
+    y_test_pred = ols_predict(std_splits["X_test"], theta)
+
+    # 7. Evaluate predictions using the evaluation metrics suite
+    val_metrics = evaluate_predictions(std_splits["y_val"], y_val_pred)
+    test_metrics = evaluate_predictions(std_splits["y_test"], y_test_pred)
+
+    return {
+        "theta": theta,
+        "y_test": std_splits["y_test"],
+        "y_test_pred": y_test_pred,
+        "test_metrics": test_metrics,
+        "val_metrics": val_metrics,
+    }
+
+    pass
 
